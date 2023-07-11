@@ -3,22 +3,25 @@
 Plugin Name: Draft Posts after Time
 Plugin URI: https://github.com/kartoffelkaese/draft-posts-after-time
 Description: Adds a custom time field to the "New Post" area and sets the post to draft status if the specified time has passed.
-Version: 1.0
+Version: 1.1
 Author: Martin Urban
 Author URI: https://github.com/kartoffelkaese/
 */
 
 function draft_posts_date_box() {
-  add_meta_box(
-    'draft-posts-meta-box', // ID for the meta box
-    'Draft Date', // Title for the meta box
-    'draft_posts_date_box_callback', // Callback function
-    'post', // Post type
-    'side', // Context
-    'default' // Priority
-  );
+  foreach (['post', 'event'] as $post_type) {
+    add_meta_box(
+      'draft-posts-meta-box', // ID for the meta box
+      'Draft Date', // Title for the meta box
+      'draft_posts_date_box_callback', // Callback function
+      $post_type, // Post type
+      'side', // Context
+      'default' // Priority
+    );
+  }
 }
 add_action( 'add_meta_boxes', 'draft_posts_date_box' );
+
 
 function draft_posts_date_box_callback( $post ) {
   wp_nonce_field( basename( __FILE__ ), 'draft_posts_date_box_nonce' );
@@ -60,9 +63,10 @@ function draft_posts_schedule_event() {
   }
   add_action( 'wp', 'draft_posts_schedule_event' );
   
-  function draft_posts_event_callback() {
+function draft_posts_event_callback() {
+  foreach (['post', 'event'] as $post_type) {
     $posts = get_posts( array(
-      'post_type' => 'post',
+      'post_type' => $post_type,
       'post_status' => 'publish',
       'meta_key' => 'expiration_date',
       'orderby' => 'meta_value',
@@ -72,18 +76,18 @@ function draft_posts_schedule_event() {
     foreach ( $posts as $post ) {
       $expiration_date = get_post_meta( $post->ID, 'expiration_date', true );
   
-      if ( ! empty( $expiration_date ) && strtotime( $expiration_date ) < time() ) {
-        $result = wp_update_post( array(
+      if (!empty($expiration_date) && strtotime($expiration_date) < time()) {
+        $result = wp_update_post(array(
           'ID' => $post->ID,
           'post_status' => 'draft',
-        ) 
-      );
-  
-        if ( is_wp_error( $result ) ) {
-          error_log( 'Error updating post ' . $post->ID . ': ' . $result->get_error_message() );
+          'post_date' => '2018-01-01 00:00:00',
+        ));
+
+        if (is_wp_error($result)) {
+          error_log('Error updating post ' . $post->ID . ': ' . $result->get_error_message());
         }
       }
     }
   }
-  add_action( 'draft_posts_hook', 'draft_posts_event_callback' );
-  
+}
+add_action('draft_posts_hook', 'draft_posts_event_callback');
