@@ -3,7 +3,7 @@
 Plugin Name: Draft Posts after Time
 Plugin URI: https://github.com/kartoffelkaese/draft-posts-after-time
 Description: Adds a custom time field to the "New Post" area and sets the post to draft status if the specified time has passed.
-Version: 1.1
+Version: 1.2
 Author: Martin Urban
 Author URI: https://github.com/kartoffelkaese/
 */
@@ -64,6 +64,8 @@ function draft_posts_schedule_event() {
   add_action( 'wp', 'draft_posts_schedule_event' );
   
 function draft_posts_event_callback() {
+  $today = date('Y-m-d');
+
   foreach (['post', 'event'] as $post_type) {
     $posts = get_posts( array(
       'post_type' => $post_type,
@@ -71,21 +73,24 @@ function draft_posts_event_callback() {
       'meta_key' => 'expiration_date',
       'orderby' => 'meta_value',
       'order' => 'ASC',
+      'meta_query' => array(
+        array(
+          'key' => 'expiration_date',
+          'value' => $today,
+          'compare' => '<=',
+          'type' => 'DATE'
+        )
+      ),
     ) );
   
     foreach ( $posts as $post ) {
-      $expiration_date = get_post_meta( $post->ID, 'expiration_date', true );
-  
-      if (!empty($expiration_date) && strtotime($expiration_date) < time()) {
-        $result = wp_update_post(array(
-          'ID' => $post->ID,
-          'post_status' => 'draft',
-          'post_date' => '2018-01-01 00:00:00',
-        ));
+      $result = wp_update_post(array(
+        'ID' => $post->ID,
+        'post_status' => 'draft',
+      ));
 
-        if (is_wp_error($result)) {
-          error_log('Error updating post ' . $post->ID . ': ' . $result->get_error_message());
-        }
+      if (is_wp_error($result)) {
+        error_log('Error updating post ' . $post->ID . ': ' . $result->get_error_message());
       }
     }
   }
