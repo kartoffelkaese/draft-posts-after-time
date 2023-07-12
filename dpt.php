@@ -76,9 +76,10 @@ function draft_posts_event_callback() {
       'meta_query' => array(
         array(
           'key' => 'expiration_date',
-          'value' => $today,
-          'compare' => '<=',
-          'type' => 'DATE'
+          'value' => array('', $today),
+          'compare' => 'BETWEEN',
+          'type' => 'DATE',
+          'inclusive' => false
         )
       ),
     ) );
