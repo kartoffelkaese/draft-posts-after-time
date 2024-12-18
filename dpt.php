@@ -5,7 +5,7 @@ declare(strict_types=1);
 Plugin Name: Draft Posts after Time
 Plugin URI: https://github.com/kartoffelkaese/draft-posts-after-time
 Description: Adds a custom time field to the "New Post" area and sets the post to draft status if the specified time has passed.
-Version: 1.3
+Version: 2.0
 Author: Martin Urban
 Author URI: https://github.com/kartoffelkaese/
 Requires PHP: 8.3
